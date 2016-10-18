@@ -1,0 +1,91 @@
+---
+- name: add stack user
+  shell: >
+    useradd stack;
+    echo "Redhat01" | passwd stack --stdin;
+    echo "stack ALL=(root) NOPASSWD:ALL" | tee -a /etc/sudoers.d/stack;
+    chmod 0440 /etc/sudoers.d/stack
+
+- name: install tripleo
+  yum: name=python-tripleoclient state=latest
+
+- name: install openstack config tools
+  yum: name=openstack-utils state=latest
+
+- name: copy undercloud conf
+  command: cp /usr/share/instack-undercloud/undercloud.conf.sample /home/stack/undercloud.conf
+  become: true
+  become_user: stack
+
+- name: set undercloud conf values
+  shell: >
+    cd /home/stack;
+    openstack-config --set undercloud.conf DEFAULT local_ip 172.16.0.1/24;
+    openstack-config --set undercloud.conf DEFAULT undercloud_public_vip  172.16.0.10;
+    openstack-config --set undercloud.conf DEFAULT undercloud_admin_vip 172.16.0.11;
+    openstack-config --set undercloud.conf DEFAULT local_interface eth0;
+    openstack-config --set undercloud.conf DEFAULT masquerade_network 172.16.0.0/24;
+    openstack-config --set undercloud.conf DEFAULT dhcp_start 172.16.0.20;
+    openstack-config --set undercloud.conf DEFAULT dhcp_end 172.16.0.120;
+    openstack-config --set undercloud.conf DEFAULT network_cidr 172.16.0.0/24;
+    openstack-config --set undercloud.conf DEFAULT network_gateway 172.16.0.1;
+    openstack-config --set undercloud.conf DEFAULT discovery_iprange 172.16.0.150,172.16.0.180
+  become: true
+  become_user: stack
+
+- name: check if undercloud already installed
+  command: ls /home/stack/stackrc
+  register: undercloud_installed
+  ignore_errors: true
+
+- name: install undercloud
+  command: openstack undercloud install
+  become: true
+  become_user: stack
+  when: undercloud_installed.stderr != ''
+
+- name: check if overcloud images already present
+  shell: >
+    source /home/stack/stackrc;
+    openstack image show overcloud-full
+  register: images_installed
+  failed_when: images_installed.stderr != '' and 'No image with a name' not in images_installed.stderr
+
+- name: install overcloud image packages
+  yum: name={{ item }} state=latest
+  with_items:
+   - rhosp-director-images
+   - rhosp-director-images-ipa
+  when: images_installed.stderr != ''
+
+- name: create images directory
+  command: mkdir /home/stack/images
+  become: true
+  become_user: stack
+  when: images_installed.stderr != ''
+  ignore_errors: true
+
+- name: copy image tars to images directory
+  command: cp /usr/share/rhosp-director-images/{{ item }} /home/stack/images/{{ item }}
+  with_items:
+   - overcloud-full-latest-8.0.tar
+   - ironic-python-agent-latest-8.0.tar
+  become: true
+  become_user: stack
+  when: images_installed.stderr != ''
+
+- name: extract image tars
+  shell: >
+    cd /home/stack/images;
+    for tarfile in *.tar; do tar -xf $tarfile; done
+  become: true
+  become_user: stack
+  when: images_installed.stderr != ''
+
+- name: upload overcloud images
+  shell: >
+    source /home/stack/stackrc;
+    openstack overcloud image upload --image-path /home/stack/images/
+  become: true
+  become_user: stack
+  when: images_installed.stderr != ''

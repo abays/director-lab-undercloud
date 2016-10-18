@@ -1,0 +1,15 @@
+---
+- name: update yum packages
+  yum: name=* state=latest
+  when: ({{ no_pkg_update }} == false)
+
+- name: reboot
+  shell: sleep 2 && shutdown -r now "Ansible updates triggered"
+  async: 1
+  poll: 0
+  ignore_errors: true
+  when: ({{ post_haste }} == false and {{ no_pkg_update }} == false)
+
+- name: wait for host to boot
+  pause: minutes=1
+  when: ({{ post_haste }} == false and {{ no_pkg_update }} == false)

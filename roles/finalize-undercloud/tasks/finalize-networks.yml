@@ -1,0 +1,74 @@
+---
+#- name: stop undercloud
+#  command: virsh destroy undercloud
+#  ignore_errors: true
+
+#- name: get a dump of default virsh network without dhcp
+#  shell: >
+#    cat << EOF > /tmp/default.xml
+#    $(virsh net-dumpxml default | sed -E "/dhcp/d" | sed -E "/range/d")
+#    EOF
+
+#- name: destroy default virsh network
+#  command: virsh net-destroy default
+
+#- name: create new default network (without dhcp)
+#  command: virsh net-create --file /tmp/default.xml
+
+#- name: start default network
+#  command: virsh net-start default
+
+#- name: start undercloud
+#  command: virsh start undercloud
+
+- name: enable remote libvirt management
+  template: src=50-libvirt-user-stack.pkla.j2 dest=/etc/polkit-1/localauthority/50-local.d/50-libvirt-user-stack.pkla
+
+- name: check if public key exists for root
+  command: ls ~/.ssh/id_rsa.pub
+  register: public_key
+
+- name: generate key if necessary for root
+  command: ssh-keygen -b 2048 -t rsa -f ~/.ssh/id_rsa -q -N ""
+  when: public_key.stdout == ''
+
+- name: copy root public key to undercloud (for root)
+  expect:
+    command: ssh-copy-id root@{{ hostvars[groups['undercloud'][0]]['ansible_host'] }}
+    responses:
+      (?i)password: "Redhat01"
+
+- name: copy root public key to undercloud (for stack)
+  expect:
+    command: ssh-copy-id stack@{{ hostvars[groups['undercloud'][0]]['ansible_host'] }}
+    responses:
+      (?i)password: "Redhat01"
+
+- name: check if public key exists for stack
+  command: ls ~/.ssh/id_rsa.pub
+  register: public_key
+  become: true
+  become_user: stack
+  ignore_errors: true
+
+- name: generate key if necessary for stack 
+  command: ssh-keygen -b 2048 -t rsa -f ~/.ssh/id_rsa -q -N ""
+  when: public_key.stdout == ''
+  become: true
+  become_user: stack
+
+- name: copy stack public key to undercloud (for root)
+  expect:
+    command: ssh-copy-id root@{{ hostvars[groups['undercloud'][0]]['ansible_host'] }} -o StrictHostKeyChecking=no
+    responses:
+      (?i)password: "Redhat01"
+  become: true
+  become_user: stack
+
+- name: copy stack public key to undercloud (for stack)
+  expect:
+    command: ssh-copy-id stack@{{ hostvars[groups['undercloud'][0]]['ansible_host'] }} -o StrictHostKeyChecking=no
+    responses:
+      (?i)password: "Redhat01"
+  become: true
+  become_user: stack

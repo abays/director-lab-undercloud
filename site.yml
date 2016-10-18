@@ -1,0 +1,21 @@
+---
+- name: create undercloud
+  hosts: vm-host
+  remote_user: root
+
+  roles:
+    - create-undercloud
+
+- name: configure undercloud
+  hosts: undercloud
+  remote_user: root 
+
+  roles:
+    - install-undercloud
+
+- name: finalize host
+  hosts: vm-host
+  remote_user: root
+
+  roles:
+    - finalize-undercloud

@@ -1,0 +1,6 @@
+---
+- include: install_repos.yml
+- include: install_libvirt.yml
+- include: create_networks.yml
+- include: create_vm.yml
+- include: acquire_vm_info.yml

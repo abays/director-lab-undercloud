@@ -1,0 +1,41 @@
+---
+- name: remove on-boot from eth0 (default)
+  command: sed -i s/ONBOOT=.*/ONBOOT=no/g /etc/sysconfig/network-scripts/ifcfg-eth0
+
+- name: configure eth1 (provisioning)
+  template: src=ifcfg-eth1.j2 dest=/etc/sysconfig/network-scripts/ifcfg-eth1
+
+# NOTE: need to go back to host and remove DHCP from default virsh network
+
+- name: set host name
+  command: hostnamectl set-hostname undercloud.redhat.local
+
+- name: restart networking
+  service: name=network state=restarted
+
+- name: set host name in host file
+  shell: echo -e "{{ inventory_hostname }}\t\tundercloud.redhat.local\tundercloud" >> /etc/hosts
+
+- name: install pip
+  command: easy_install pip
+
+- name: install pexpect
+  yum: name=pexpect state=latest
+
+- name: upgrade pexpect
+  command: pip install pexpect --upgrade
+
+- name: check if public key exists for stack
+  command: ls /home/stack/.ssh/id_rsa.pub
+  register: public_key
+  failed_when: public_key.stderr != '' and 'No such file or directory' not in public_key.stderr 
+
+- name: generate key if necessary for stack
+  command: ssh-keygen -b 2048 -t rsa -f /home/stack/.ssh/id_rsa -q -N ""
+  when: public_key.stdout == ''
+
+- name: copy stack public key to undercloud (for stack)
+  expect:
+    command: ssh-copy-id -i /home/stack/.ssh/id_rsa.pub stack@{{ vm_host_ip }} -o StrictHostKeyChecking=no
+    responses:
+      (?i)password: "Redhat01"
