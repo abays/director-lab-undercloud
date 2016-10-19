@@ -83,3 +83,15 @@
   become: true
   become_user: stack
   when: images_installed.stderr != ''
+
+- name: make stack user my_templates directory
+  file: name=/home/stack/my_templates state=directory owner=stack group=stack
+
+- name: create extra templates for overcloud, part 1
+  template: src=node-setup.yaml.j2 dest=/home/stack/my_templates/node-setup.yaml
+
+- name: create extra templates for overcloud, part 2
+  template: src=node-setup.sh.j2 dest=/home/stack/my_templates/node-setup.sh
+
+- name: create extra templates for overcloud, part 3
+  template: src=post-deployment.yaml.j2 dest=/home/stack/my_templates/post-deployment.yaml
