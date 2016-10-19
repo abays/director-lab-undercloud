@@ -50,8 +50,14 @@
   command: ssh-keygen -b 2048 -t rsa -f /home/stack/.ssh/id_rsa -q -N ""
   when: public_key.stdout == ''
 
-- name: copy stack public key to undercloud (for stack)
+- name: fix permissions on private key for stack
+  file: name=/home/stack/.ssh/id_rsa owner=stack group=stack state=file
+
+- name: fix permissions on public key for stack
+  file: name=/home/stack/.ssh/id_rsa.pub owner=stack group=stack state=file
+
+- name: copy stack public key to host (for stack)
   expect:
-    command: ssh-copy-id -i /home/stack/.ssh/id_rsa.pub stack@{{ vm_host_ip }} -o StrictHostKeyChecking=no
+    command: ssh-copy-id -i /home/stack/.ssh/id_rsa.pub stack@192.168.122.1 -o StrictHostKeyChecking=no
     responses:
       (?i)password: "Redhat01"
