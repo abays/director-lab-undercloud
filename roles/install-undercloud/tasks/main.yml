@@ -2,3 +2,4 @@
 - include: configure_networks.yml
 - include: update_packages.yml
 - include: configure_openstack.yml
+- include: configure_services.yml

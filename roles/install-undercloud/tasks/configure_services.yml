@@ -1,0 +1,12 @@
+---
+- name: create bootif-fix script
+  template: src=bootif-fix.j2 dest=/usr/bin/bootif-fix mode=a+x
+
+- name: create bootif-fix service
+  template: src=bootif-fix.service.j2 dest=/usr/lib/systemd/system/bootif-fix.service
+
+- name: reload daemons
+  command: systemctl daemon-reload
+
+- name: enable bootif-fix service
+  service: name=bootif-fix enabled=yes state=started
