@@ -59,7 +59,7 @@
 
 - name: create vm
   shell: >
-    virt-install --ram 16384 --vcpus 4 --os-variant rhel7 \
+    virt-install --ram 16384 --vcpus 4 --os-variant rhel7 --virt-type {{ virt_type }} \
         --disk path=/var/lib/libvirt/images/undercloud.qcow2,device=disk,bus=virtio,format=qcow2 \
         --import --noautoconsole --vnc --network network:provisioning \
         --network network:default --name undercloud
