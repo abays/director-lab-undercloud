@@ -1,8 +1,8 @@
 ---
-- name: remove on-boot from eth0 (default)
+- name: remove on-boot from eth0 (provisioning)
   command: sed -i s/ONBOOT=.*/ONBOOT=no/g /etc/sysconfig/network-scripts/ifcfg-eth0
 
-- name: configure eth1 (provisioning)
+- name: configure eth1 (default)
   template: src=ifcfg-eth1.j2 dest=/etc/sysconfig/network-scripts/ifcfg-eth1
 
 # NOTE: need to go back to host and remove DHCP from default virsh network
@@ -24,6 +24,22 @@
 
 - name: upgrade pexpect
   command: pip install pexpect --upgrade
+
+- name: add stack user
+  shell: >
+    useradd stack;
+    echo "Redhat01" | passwd stack --stdin;
+    echo "stack ALL=(root) NOPASSWD:ALL" | tee -a /etc/sudoers.d/stack;
+    chmod 0440 /etc/sudoers.d/stack
+
+- name: check if stack user .ssh directory exists
+  command: ls /home/stack/.ssh
+  register: stack_ssh_dir
+  failed_when: stack_ssh_dir.stderr != '' and 'No such file or directory' not in stack_ssh_dir.stderr
+
+- name: make stack user .ssh directory if necessary
+  file: name=/home/stack/.ssh state=directory owner=stack group=stack
+  when: stack_ssh_dir.stdout == ''
 
 - name: check if public key exists for stack
   command: ls /home/stack/.ssh/id_rsa.pub

@@ -1,11 +1,4 @@
 ---
-- name: add stack user
-  shell: >
-    useradd stack;
-    echo "Redhat01" | passwd stack --stdin;
-    echo "stack ALL=(root) NOPASSWD:ALL" | tee -a /etc/sudoers.d/stack;
-    chmod 0440 /etc/sudoers.d/stack
-
 - name: install tripleo
   yum: name=python-tripleoclient state=latest
 
@@ -36,7 +29,7 @@
 - name: check if undercloud already installed
   command: ls /home/stack/stackrc
   register: undercloud_installed
-  ignore_errors: true
+  failed_when: undercloud_installed.stderr != '' and 'No such file or directory' not in undercloud_installed.stderr
 
 - name: install undercloud
   command: openstack undercloud install
@@ -62,8 +55,9 @@
   command: mkdir /home/stack/images
   become: true
   become_user: stack
+  register: create_images_dir
   when: images_installed.stderr != ''
-  ignore_errors: true
+  failed_when: create_images_dir.stderr != '' and 'File exists' not in create_images_dir.stderr
 
 - name: copy image tars to images directory
   command: cp /usr/share/rhosp-director-images/{{ item }} /home/stack/images/{{ item }}

@@ -24,3 +24,8 @@
 
 - name: enable and start libvirtd
   service: name=libvirtd state=started enabled=yes
+
+- name: add stack user
+  shell: >
+    useradd stack;
+    echo "Redhat01" | passwd stack --stdin

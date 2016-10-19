@@ -11,7 +11,7 @@
 - name: check if images exist
   command: ls /var/lib/libvirt/images/rhel7-guest-official.qcow2
   register: images_exist
-  ignore_errors: true
+  failed_when: images_exist.stderr != '' and 'No such file or directory' not in images_exist.stderr
 
 - name: get guest image
   shell: >
@@ -67,4 +67,9 @@
 
 - name: make sure vm is started
   command: virsh start undercloud
-  ignore_errors: true
+  register: undercloud_started
+  failed_when: undercloud_started.stderr != '' and 'Domain is already active' not in undercloud_started.stderr
+
+- name: wait for vm to start if it was shutdown
+  pause: minutes=1
+  when: undercloud_started.stdout == 'Domain undercloud started' or undercloud_exists.stdout == ''
