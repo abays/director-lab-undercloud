@@ -2,4 +2,3 @@
 10.19.139.102
 
 [undercloud]
-#192.168.122.113 ansible_ssh_pass=Redhat01
