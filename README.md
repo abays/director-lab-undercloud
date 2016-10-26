@@ -6,7 +6,7 @@ So what exactly does this do?  It...
 
 1. Configures the target machine to use internal Red Hat repos needed for access to OSP and Director
 
-2. Installs libvirt and associate toosl on target machine
+2. Installs libvirt and associated tools on target machine
 
 3. Pulls down a RHEL guest image from internal Red Hat repos
 
