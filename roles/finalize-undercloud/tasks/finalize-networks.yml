@@ -75,4 +75,4 @@
   become_user: stack
 
 - name: set undercloud host lookup
-  shell: echo -e "{{ hostvars[groups['undercloud'][0]]['ansible_host']  }}\t\tundercloud.redhat.local\tundercloud" >> /etc/hosts
+  shell: echo -e "{{ hostvars[groups['undercloud'][0]]['ansible_host']  }}\t\tundercloud{{ uc_index }}.redhat.local\tundercloud{{ uc_index }}" >> /etc/hosts

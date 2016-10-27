@@ -1,11 +1,11 @@
 ---
 - name: create provisioning network definition
-  template: src=provisioning.xml.j2 dest=/tmp/provisioning.xml
+  template: src=provisioning.xml.j2 dest=/tmp/provisioning{{ uc_index }}.xml
 
 - name: start provisioning network
   shell: >
-    virsh net-define /tmp/provisioning.xml;
-    virsh net-autostart provisioning;
-    virsh net-start provisioning
+    virsh net-define /tmp/provisioning{{ uc_index }}.xml;
+    virsh net-autostart provisioning{{ uc_index }};
+    virsh net-start provisioning{{ uc_index }}
   register: provisioning_network
   failed_when: provisioning_network.stderr != '' and 'network is already active' not in provisioning_network.stderr

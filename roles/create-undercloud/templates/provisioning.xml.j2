@@ -1,4 +1,4 @@
 <network>
-  <name>provisioning</name>
-  <ip address="172.16.0.254" netmask="255.255.255.0"/>
+  <name>provisioning{{ uc_index }}</name>
+  <ip address="172.{{ 16 + (uc_index | int) }}.0.254" netmask="255.255.255.0"/>
 </network>

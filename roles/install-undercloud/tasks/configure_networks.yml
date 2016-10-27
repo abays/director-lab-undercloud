@@ -8,13 +8,13 @@
 # NOTE: need to go back to host and remove DHCP from default virsh network
 
 - name: set host name
-  command: hostnamectl set-hostname undercloud.redhat.local
+  command: hostnamectl set-hostname undercloud{{ uc_index }}.redhat.local
 
 - name: restart networking
   service: name=network state=restarted
 
 - name: set host name in host file
-  shell: echo -e "{{ inventory_hostname }}\t\tundercloud.redhat.local\tundercloud" >> /etc/hosts
+  shell: echo -e "{{ inventory_hostname }}\t\tundercloud{{ uc_index }}.redhat.local\tundercloud{{ uc_index }}" >> /etc/hosts
 
 - name: install pip
   command: easy_install pip

@@ -1,6 +1,6 @@
 ---
 - name: get current MAC of default interface
-  shell: virsh domiflist undercloud | awk '/default/ {print $5};'
+  shell: virsh domiflist undercloud{{ uc_index }} | awk '/default/ {print $5};'
   register: vm_mac
 
 - name: DEBUG
@@ -44,9 +44,4 @@
     ansible_host: "{{ vm_ip.stdout }}"
     ansible_user: "root"
     ansible_ssh_pass: "Redhat01"
-    #ansible_ssh_private_key_file: "{{ vm_key.stdout }}"
     ansible_become: true
-
-#- name: give vm ssh a minute to come up
-#  pause: minutes=1
-#  when: ({{ post_haste }} == false)

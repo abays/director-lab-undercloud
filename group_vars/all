@@ -6,3 +6,4 @@ osp_repo: GA 8
 destroy_undercloud: false
 post_haste: false
 no_pkg_update: false
+uc_index: 0
